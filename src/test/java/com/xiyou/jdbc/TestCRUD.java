@@ -1,10 +1,11 @@
 package com.xiyou.jdbc;
 
-import com.sun.deploy.security.ValidationState;
-import jdk.nashorn.internal.codegen.CompilerConstants;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.sql.*;
 
 
@@ -34,18 +35,48 @@ public class TestCRUD {
     public void select(){
         try {
             Statement st = conn.createStatement();
-            String sql = "SELECT id,name,age FROM test";
+            String sql = "SELECT id,name,age,LENGTH (picture)FROM test";
             ResultSet rs = st.executeQuery(sql);
             while (rs.next()){
                 int id = rs.getInt("id");
                 String name = rs.getString("name");
                 int age = rs.getInt("age");
-                System.out.println("id:" + id + " name:" + name + "　age:" + age );
+                System.out.println("id:" + id + " name:" + name + "　age:" + age  );
             }
             rs.close();
             st.close();
             conn.close();
         } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 大文件插入
+     */
+    @Test
+    public void LongBlobInsert(){
+        String sql = "INSERT INTO test(id,name,age,picture) VALUES (?,?,?,?)";
+        try {
+            PreparedStatement pst = conn.prepareStatement(sql);
+            pst.setInt(1,500);
+            pst.setString(2,"image");
+            pst.setInt(3,8);
+            FileInputStream ins =new FileInputStream("D:\\image_recognition\\11.1.png");
+            //available()获取流长度
+            int length = ins.available();
+            pst.setBinaryStream(4,ins,length);
+            if (pst.execute()){
+                System.out.println("successful!");
+            }else{
+                System.out.println("error!");
+            }
+            conn.commit();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
