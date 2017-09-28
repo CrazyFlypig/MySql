@@ -182,5 +182,26 @@ mysql> create Function f_add (a int, b int) returns int
 ### innoDB和BerkleyDB
 * InnoDB和BDB包括了对事务的处理和外来键支持
 ### MyISAM和InnoDB的区别：
-* MyISAM提供索引和字段管理功能，MyISAM使用一种表格锁定的机制，来优化多个并发的读写操作。代价是经常运行OPTIMIZE TABL命令，来恢复被更新机制所浪费的空间。MyISAM数据引擎不支持事务处理也不支持外来键。
-* InnoDB和Berkley DB 使用技术是MYSQL+API，InnoDB和BDB包括了对事务处理和外来键支持
+1. 文件存储
+	1. InnoDB在磁盘上存储表空间数据文件和日志文件
+	2. MyISAM在磁盘上存储三个文件，命名类型：`表名.文件类型`。
+		* `.frm`，存储表定义
+		* `MYD`，数据文件扩展名
+		* `MYI`，索引文件扩展名
+2. InnoDB支持事务，外部键等高级功能；MyISAM强调性能，执行速度快，但不支持事务
+3. 对数据的大量INSERT和UPDATE，使用InnoDB性能更佳；执行大量SELECT，MyISAM更佳。
+4. 表的具体行数
+	1. `select count(*) from table`，MyISAM只简单读出保存好的行数。注意的是，当count（*）包含where语句时，两种表的操作是一样的。
+	2. InnoDB中不保存具体行数，也就是说，执行`select count(*) from table`时，InnoDB要扫描一遍整个表来计算有多少行。
+5. 锁
+	1. MyISAM仅支持表锁
+	2. InnoDB提供行锁。提供与Oracle类型一致的不加锁读取；如果执行一个SQL语句时，MySql不确定要扫描的范围，InnoDB同样会锁全表。
+4. InnoDB不支持全文索引，而MyISAM支持。
+5. InnoDB可以通过重播其日志从崩溃或其它意外关闭恢复。MyISAM
+## 性能调优
+### in和exists。
+1. in()语句，只执行一次，它查出表中所有的字段值并缓存起来，之后再检查字段值是否与结果值相符。
+2. exists语句，并不缓存结果集，重点查看结果集中是否有记录，类似于遍历查询集。
+3. 在多表查询中，若结果集表数据量较大时，使用exists；若查询集较大时使用in；若一样大，则二者效率差不多。 
+
+
